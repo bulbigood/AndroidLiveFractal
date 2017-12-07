@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:sample="http://schemas.android.com/apk/res-auto">
+	android:title="@string/app_name"
+	android:icon="@drawable/icon"
+	android:key="livewallpaper_settings">
+
+	<Preference
+		android:title="@string/main_set_wallpaper"
+		android:key="@string/main_set_wallpaper" />
+	<Preference
+		android:title="@string/main_explore"
+		android:key="@string/main_explore" />
+	<Preference
+		android:title="@string/main_benchmark"
+		android:key="@string/main_benchmark"
+		android:enabled="false"/>
+	<PreferenceCategory android:title="@string/main_category_settings">
+		<PreferenceScreen android:title="@string/main_fractal"
+			android:key="@string/main_fractal"
+			android:summary="@string/main_fractal_summary">
+			<ListPreference android:title="@string/fractal_type"
+				android:key="@string/fractal_type"
+				android:defaultValue="Mandelbrot"
+				android:entries="@array/fractal_items_value"
+							android:entryValues="@array/fractal_items_value"
+				android:enabled="false"/>
+			<com.turbomandelbrot.ui.seekbarpreference.SeekBarPreference
+				android:key="@string/fractal_iterations_key"
+				android:title="@string/fractal_iterations"
+				android:summary="@string/fractal_iterations_summary"
+				android:defaultValue="100"
+				sample:msbp_minValue="1"
+				sample:msbp_maxValue="501" />
+		</PreferenceScreen>
+		<PreferenceScreen android:title="@string/main_quality"
+			android:key="@string/main_quality"
+			android:summary="@string/main_quality_summary">
+			<PreferenceCategory android:title="@string/quality_category_wallpaper">
+				<ListPreference android:title="@string/quality_resolution_factor"
+								android:key="@string/quality_resolution_factor_wallpaper_key"
+								android:summary="@string/quality_resolution_factor_summary"
+								android:entries="@array/quality_resolution_items"
+								android:entryValues="@array/quality_resolution_items_value"
+								android:defaultValue="1"/>
+				<ListPreference android:title="@string/quality_antiflickering"
+								android:key="@string/quality_antiflickering_key"
+								android:summary="@string/quality_antiflickering_summary"
+								android:entries="@array/quality_antiflickering_items"
+								android:entryValues="@array/quality_antiflickering_items_value"
+								android:defaultValue="0.25"/>
+			</PreferenceCategory>
+			<Preference
+					android:title=""
+					android:key=""
+					android:enabled="false"/>
+			<PreferenceCategory android:title="@string/quality_category_explore">
+				<ListPreference android:title="@string/quality_resolution_factor"
+								android:key="@string/quality_resolution_factor_explore_key"
+								android:summary="@string/quality_resolution_factor_summary"
+								android:entries="@array/quality_resolution_items"
+								android:entryValues="@array/quality_resolution_items_value"
+								android:defaultValue="1"/>
+				<CheckBoxPreference
+						android:title="@string/quality_show_fps"
+						android:key="@string/quality_show_fps_key"/>
+			</PreferenceCategory>
+		</PreferenceScreen>
+		<PreferenceScreen android:title="@string/main_color"
+			android:key="@string/main_color"
+			android:summary="@string/main_color_summary"
+						  android:enabled="false">
+		</PreferenceScreen>
+		<PreferenceScreen android:title="@string/main_wallpaper_settings"
+			android:key="@string/main_wallpaper_settings"
+			android:summary="@string/main_wallpaper_settings_summary"
+						  android:enabled="false">
+		</PreferenceScreen>
+	</PreferenceCategory>
+	<Preference android:title="@string/main_restore"
+		android:key="@string/main_restore"
+				android:enabled="false"/>
+</PreferenceScreen>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="errors.must_be_between">Must be between</string>
+    <string name="errors.and">And</string>
+    <string name="enter_custom_value">Enter custom value</string>
+    <string name="apply">OK</string>
+
+    <string name="app_name">TurboMandelbrot</string>
+    <string name="preferences_name">TurboMandelbrot Preferences</string>
+    <string name="explore_name">TurboMandelbrot Exploring</string>
+
+    <string name="main_set_wallpaper">Set wallpaper</string>
+    <string name="main_explore">Explore fractal</string>
+    <string name="main_benchmark">Benchmark</string>
+    <string name="main_category_settings">Settings</string>
+    <string name="main_fractal">Fractal</string>
+    <string name="main_fractal_summary">Fractal form</string>
+    <string name="main_quality">Quality</string>
+    <string name="main_quality_summary">Image quality and optimizations</string>
+    <string name="main_color">Color</string>
+    <string name="main_color_summary">Visualization settings</string>
+    <string name="main_wallpaper_settings">Wallpaper</string>
+    <string name="main_wallpaper_settings_summary">Wallpaper behavior</string>
+    <string name="main_restore">Restore default settings</string>
+
+    <string name="fractal_type">Type of fractal</string>
+    <string name="fractal_iterations">Number of iterations</string>
+    <string name="fractal_iterations_key">ITERATIONS_NUM</string>
+    <string name="fractal_iterations_summary">Level of detail</string>
+
+    <string name="quality_category_wallpaper">Wallpaper</string>
+    <string name="quality_category_explore">Exploring</string>
+    <string name="quality_resolution_factor">Resolution factor</string>
+    <string name="quality_resolution_factor_wallpaper_key">WALLPAPER_RESOLUTION</string>
+    <string name="quality_resolution_factor_explore_key">EXPLORE_RESOLUTION</string>
+    <string name="quality_resolution_factor_summary">Affects the number of pixels. Strongly affects the performance. Default 100</string>
+    <string name="quality_antiflickering">Antiflickering</string>
+    <string name="quality_antiflickering_key">ANTIFLICKERING</string>
+    <string name="quality_antiflickering_summary">Eliminates flicker and smoothes the image. Weakly affects the performance. Default 200</string>
+    <string name="quality_show_fps_key">SHOW_FPS</string>
+    <string name="quality_show_fps">Show FPS</string>
+
+    <string name="did_not_pass_requirements_title">Unsuitable GPU!</string>
+    <string name="did_not_pass_requirements_message">Your GPU does not have some instructions necessary for the correct operation of the application. Errors may occur during use.</string>
+</resources>

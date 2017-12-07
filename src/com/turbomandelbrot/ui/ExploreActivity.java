@@ -1,10 +1,8 @@
 package com.turbomandelbrot.ui;
 
 import android.app.Activity;
-import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.view.Display;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
@@ -14,10 +12,10 @@ import com.turbomandelbrot.logic.ScreenMatrix;
 import com.turbomandelbrot.logic.TouchExplorer;
 import com.turbomandelbrot.logic.touch_listeners.TouchExplorerListener;
 
+/**
+ * Created by Никита on 25.08.2017.
+ */
 public class ExploreActivity extends Activity {
-    public static float FPS_CAP = 60;
-    public static float MINIMAL_DELTA_TIME = (float) 1000 / FPS_CAP;
-
 
     // Our OpenGL Surfaceview
     private GLSurfaceView glSurfaceView;
@@ -37,10 +35,6 @@ public class ExploreActivity extends Activity {
 
         // Fullscreen mode
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-        FPS_CAP = display.getRefreshRate();
-        MINIMAL_DELTA_TIME = (float) 1000 / FPS_CAP;
 
         screenMatrix = new ScreenMatrix();
         touchExplorer = new TouchExplorer(screenMatrix);

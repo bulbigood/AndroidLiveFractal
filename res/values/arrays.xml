@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="quality_resolution_items_value">
+        <item>2</item>
+        <item>1.5</item>
+        <item>1</item>
+        <item>0.75</item>
+        <item>0.5</item>
+        <item>0.25</item>
+    </string-array>
+
+    <string-array name="quality_resolution_items">
+        <item>200%</item>
+        <item>150%</item>
+        <item>100%</item>
+        <item>75%</item>
+        <item>50%</item>
+        <item>25%</item>
+    </string-array>
+
+    <string-array name="quality_antiflickering_items_value">
+        <item>0</item>
+        <item>0.5</item>
+        <item>0.4</item>
+        <item>0.25</item>
+        <item>0.2</item>
+        <item>0.1</item>
+        <item>0.05</item>
+    </string-array>
+
+    <string-array name="quality_antiflickering_items">
+        <item>OFF</item>
+        <item>100%</item>
+        <item>125%</item>
+        <item>200%</item>
+        <item>250%</item>
+        <item>500%</item>
+        <item>1000%</item>
+    </string-array>
+
+    <string-array name="fractal_items_value">
+        <item>Mandelbrot</item>
+    </string-array>
+</resources>
