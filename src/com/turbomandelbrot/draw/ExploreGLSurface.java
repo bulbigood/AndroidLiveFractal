@@ -4,6 +4,9 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import com.turbomandelbrot.logic.Explorer;
 
+/**
+ * Created by Никита on 25.08.2017.
+ */
 public class ExploreGLSurface extends GLSurfaceView {
 
     private final GLRenderer mRenderer;
