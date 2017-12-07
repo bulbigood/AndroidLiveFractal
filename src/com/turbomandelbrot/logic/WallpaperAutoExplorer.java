@@ -67,9 +67,9 @@ public class WallpaperAutoExplorer implements Explorer {
         checkpoints = new ArrayList<>();
         checkpointsScalingDelta = new ArrayList<>();
         checkpoints.add(new Checkpoint(-0.84002f, -0.224302f,
-                120000, 0, 0));
+                120, 0, 0));
         checkpoints.add(new Checkpoint(-0.84002f, -0.224302f,
-                20000000, 0, 30000));
+                20000, 0, 30000));
         showFPS = false;
         benchmark = 0;
         circular = true;
