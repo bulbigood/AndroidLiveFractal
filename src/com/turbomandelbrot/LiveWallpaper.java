@@ -7,6 +7,7 @@ import android.view.SurfaceHolder;
 
 import android.view.WindowManager;
 import com.turbomandelbrot.draw.WallpaperGLSurface;
+import com.turbomandelbrot.logic.CheckpointManager;
 import com.turbomandelbrot.logic.Explorer;
 import com.turbomandelbrot.logic.WallpaperAutoExplorer;
 
@@ -18,8 +19,8 @@ public class LiveWallpaper extends WallpaperService {
 	public static Engine myEngine;
 	private WallpaperGLSurface wallpaperSurface;
 
-
-	private static WallpaperAutoExplorer wallpaperAutoExplorer;
+	private CheckpointManager checkpointManager;
+	private WallpaperAutoExplorer wallpaperAutoExplorer;
 
 
 	@Override
@@ -27,7 +28,8 @@ public class LiveWallpaper extends WallpaperService {
 	{
 		super.onCreate();
 		Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-		wallpaperAutoExplorer = new WallpaperAutoExplorer();
+		checkpointManager = new CheckpointManager(this);
+		wallpaperAutoExplorer = new WallpaperAutoExplorer(checkpointManager);
 		FPS_CAP = display.getRefreshRate();
 		MINIMAL_DELTA_TIME = (float) 1000 / FPS_CAP;
 	}
@@ -38,7 +40,7 @@ public class LiveWallpaper extends WallpaperService {
 		super.onDestroy();
 	}
 
-	public static Explorer getExplorer(){
+	public Explorer getExplorer(){
 		return wallpaperAutoExplorer;
 	}
 
@@ -55,7 +57,7 @@ public class LiveWallpaper extends WallpaperService {
 		public void onCreate(SurfaceHolder surfaceHolder)
 		{
 			super.onCreate(surfaceHolder);
-			wallpaperSurface = new WallpaperGLSurface(LiveWallpaper.this, new WallpaperAutoExplorer());
+			wallpaperSurface = new WallpaperGLSurface(LiveWallpaper.this, wallpaperAutoExplorer);
 		}
 
 		@Override

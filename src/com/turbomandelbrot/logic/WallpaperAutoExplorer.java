@@ -1,7 +1,6 @@
 package com.turbomandelbrot.logic;
 
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import com.turbomandelbrot.LiveWallpaper;
 import com.turbomandelbrot.ui.WallpaperPreferencesActivity;
 
@@ -10,11 +9,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 public class WallpaperAutoExplorer implements Explorer {
+
+    public static final float SPEED_COEF = 25000;
+
     DrawTimer drawTimer;
     Fractal fractal;
-    byte benchmark;
+    boolean benchmark;
     boolean showFPS;
 
+    private float speed = 1;
     boolean circular;
 
     private float fps = LiveWallpaper.FPS_CAP;
@@ -22,7 +25,6 @@ public class WallpaperAutoExplorer implements Explorer {
     private int drawCycleTime;
     private int checkpointCycleTime = 0;
     private int fpsCycleTime = 0;
-    private int lastCircularCheckpointDeltaTime = 30000;
 
     /**
      * Подавление мерцания (TAA - Temporal anti-aliasing). Для ручного эксплорера не годится. Состояния 0 и 1
@@ -42,17 +44,17 @@ public class WallpaperAutoExplorer implements Explorer {
     private float quality;
     private int iterationsNum;
     private float[] pos = NULL_POS;
-    private float angle = 0;
     private float[] prev_pos = NULL_POS;
-    private float prev_angle = 0;
 
     private ArrayList<Checkpoint> checkpoints;
-    private ArrayList<Float> checkpointsScalingDelta;
-
     private ArrayList<Integer> fpsShowTimesList;
     private LinkedList<Integer> benchmarkTimesList;
 
-    public WallpaperAutoExplorer(){
+    private CheckpointManager manager;
+
+    public WallpaperAutoExplorer(CheckpointManager cman){
+        manager = cman;
+
         fractal = Fractal.MANDELBROT;
         SharedPreferences prefs = WallpaperPreferencesActivity.WallpaperPreferences.getSharedPreferences();
 
@@ -60,40 +62,46 @@ public class WallpaperAutoExplorer implements Explorer {
         quality = Float.parseFloat(str);
         iterationsNum = prefs.getInt("ITERATIONS_NUM", fractal.DEFAULT_ITERATIONS_NUM);
         str = prefs.getString("ANTIFLICKERING", "");
+        speed = prefs.getInt("WALLPAPER_SPEED", 1);
         antiflickering_new_pixel_weight = Float.parseFloat(str);
         if(antiflickering_new_pixel_weight > 0 && antiflickering_new_pixel_weight < 1)
             antiflickering_mode = 1;
-
-        checkpoints = new ArrayList<>();
-        checkpointsScalingDelta = new ArrayList<>();
-        checkpoints.add(new Checkpoint(-0.84002f, -0.224302f,
-                120, 0, 0));
-        checkpoints.add(new Checkpoint(-0.84002f, -0.224302f,
-                20000, 0, 30000));
         showFPS = false;
-        benchmark = 0;
-        circular = true;
+        benchmark = false;
+        circular = prefs.getBoolean("Circular", true);
 
+        initializeCheckpoints();
         doCycle();
-        //Расчет коэффициента изменения зума для каждой пары ближайших чекпоинтов
-        for(int i = 0; i < checkpoints.size(); i++){
-            Checkpoint a = checkpoints.get(i);
-            Checkpoint b = i == checkpoints.size() - 1 ? checkpoints.get(0) : checkpoints.get(i + 1);
-
-            float scaleDelta = (float) Math.pow(b.scale / a.scale, LiveWallpaper.MINIMAL_DELTA_TIME / (b.time - a.time)) - 1;
-            checkpointsScalingDelta.add(scaleDelta);
-        }
 
         drawCycleTime = checkpoints.get(checkpoints.size() - 1).time;
         drawTimer = new DrawTimer();
 
         if(showFPS)
             fpsShowTimesList = new ArrayList((int)Math.ceil(FPS_SHOW_LATENCY / LiveWallpaper.MINIMAL_DELTA_TIME));
-        if(benchmark > 0)
+        if(benchmark)
             benchmarkTimesList = new LinkedList<>();
 
-        pos = new float[] {checkpoints.get(0).x, checkpoints.get(0).y, checkpoints.get(0).scale * quality};
-        angle = checkpoints.get(0).angle;
+        pos = new float[] {checkpoints.get(0).x, checkpoints.get(0).y, checkpoints.get(0).scale * quality, checkpoints.get(0).angle};
+    }
+
+    public void initializeCheckpoints(){
+        checkpoints = new ArrayList<>();
+        Iterator iter = null;
+        if(benchmark)
+            iter = manager.pathBenchIterator();
+        else
+            iter = manager.pathIterator();
+
+        while (iter.hasNext()) {
+            float[] point = (float[]) iter.next();
+            checkpoints.add(new Checkpoint(point[0], point[1], point[2], point[3], 0));
+        }
+
+        for (int i = 0; i < checkpoints.size() - 1; i++) {
+            Checkpoint a = checkpoints.get(i);
+            Checkpoint b = checkpoints.get(i+1);
+            b.time = a.time + (int)(distance(a, b) / speed * SPEED_COEF);
+        }
     }
 
     public int antiflickeringEnabled(){
@@ -125,7 +133,7 @@ public class WallpaperAutoExplorer implements Explorer {
         return iterationsNum;
     }
 
-    public byte benchmark(){
+    public boolean benchmark(){
         return benchmark;
     }
 
@@ -151,44 +159,36 @@ public class WallpaperAutoExplorer implements Explorer {
             }
         }
 
-        if (benchmark != 0 && !drawTimer.stopped())
+        if (benchmark && !drawTimer.stopped())
             benchmarkTimesList.add(drawTimer.getDeltaTime());
 
         checkpointCycleTime = (checkpointCycleTime + drawTimer.getDeltaTime()) % drawCycleTime;
 
         Checkpoint startPoint = null;
         Checkpoint endPoint = null;
-        float scaleDelta = 0;
         for(int i = 0; i < checkpoints.size() - 1; i++){
             startPoint = checkpoints.get(i);
             endPoint = checkpoints.get(i + 1);
-            if(checkpointCycleTime >= startPoint.time && checkpointCycleTime < endPoint.time) {
-                scaleDelta = checkpointsScalingDelta.get(i);
+            if(checkpointCycleTime >= startPoint.time && checkpointCycleTime < endPoint.time)
                 break;
-            }
         }
 
         float progress = (float)(checkpointCycleTime - startPoint.time) / (endPoint.time - startPoint.time);
-        Checkpoint diff = diffCheckpoint(startPoint, endPoint, scaleDelta, progress);
+        Checkpoint diff = diffCheckpoint(startPoint, endPoint, progress);
 
         //Подгонка координат для правильной работы оптимизации перемещения картинки
-        if(MathFunctions.floatEqual(diff.scale, 0)) {
-            diff.x = Math.round(diff.x * (startPoint.scale + diff.scale) * quality) /
-                    ((startPoint.scale + diff.scale) * quality);
-            diff.y = Math.round(diff.y * (startPoint.scale + diff.scale) * quality) /
-                    ((startPoint.scale + diff.scale) * quality);
+        //TODO: сделать плавное перемещение картинки при низком разрешении (рендер за границы экрана на 1 пиксель)
+
+        if(MathFunctions.floatEqual(diff.scale, 0, 0.001f)) {
+            float scale = startPoint.scale + diff.scale;
+            diff.x = Math.round(diff.x * scale * quality) / (scale * quality);
+            diff.y = Math.round(diff.y * scale * quality) / (scale * quality);
         }
 
         prev_pos = pos;
-        prev_angle = angle;
 
-        pos = new float[] {MathFunctions.getEnteringTheRange(startPoint.x + diff.x, startPoint.x, endPoint.x),
-                MathFunctions.getEnteringTheRange(startPoint.y + diff.y, startPoint.y, endPoint.y),
-                MathFunctions.getEnteringTheRange(prev_pos[2] + diff.scale, startPoint.scale, endPoint.scale)};
-        angle = startPoint.angle + diff.angle;
+        pos = new float[] {startPoint.x + diff.x, startPoint.y + diff.y, startPoint.scale + diff.scale, startPoint.angle + diff.angle};
     }
-
-
 
     @Override
     public float posX() {
@@ -207,17 +207,12 @@ public class WallpaperAutoExplorer implements Explorer {
 
     @Override
     public float angle() {
-        return angle;
-    }
-
-    @Override
-    public float prevAngle() {
-        return prev_angle;
+        return pos[3];
     }
 
     @Override
     public boolean isStatic() {
-        return pos[0] == prev_pos[0] && pos[1] == prev_pos[1] && pos[2] == prev_pos[2] && angle == prev_angle;
+        return pos[0] == prev_pos[0] && pos[1] == prev_pos[1] && pos[2] == prev_pos[2] && pos[3] == prev_pos[3];
     }
 
     @Override
@@ -237,7 +232,7 @@ public class WallpaperAutoExplorer implements Explorer {
 
     @Override
     public float getAverageFPS() {
-        if(benchmark != 0 && benchmarkTimesList.size() > 0) {
+        if(benchmark && benchmarkTimesList.size() > 0) {
             float sum = 0;
             Iterator<Integer> itr = benchmarkTimesList.iterator();
             while (itr.hasNext())
@@ -254,7 +249,7 @@ public class WallpaperAutoExplorer implements Explorer {
         if(circular)
         {
             if (!(start.x == end.x && start.y == end.y && start.scale == end.scale))
-                checkpoints.add(new Checkpoint(start.x, start.y, start.scale, start.angle, end.time + lastCircularCheckpointDeltaTime));
+                checkpoints.add(new Checkpoint(start.x, start.y, start.scale, start.angle, end.time + (int)(distance(end, start) / speed * SPEED_COEF)));
         } else {
             for (int i = checkpoints.size() - 2; i >= 0; i--){
                 Checkpoint point = checkpoints.get(i);
@@ -264,9 +259,21 @@ public class WallpaperAutoExplorer implements Explorer {
         }
     }
 
-    private Checkpoint diffCheckpoint(Checkpoint a, Checkpoint b, float scaleDelta, float timeCoef){
-        return new Checkpoint(timeCoef * (b.x - a.x), timeCoef * (b.y - a.y), prev_pos[2] * scaleDelta * drawTimer.getDeltaTime() / LiveWallpaper.MINIMAL_DELTA_TIME,
-                timeCoef * (b.angle - a.angle), (int)(timeCoef * (b.time - a.time)));
+    private Checkpoint diffCheckpoint(Checkpoint a, Checkpoint b, float timeCoef){
+        float scale = 0;
+        if(!MathFunctions.floatEqual(a.scale, b.scale, 0.0001f))
+            scale = MathFunctions.geomProgression(a.scale, b.scale, MathFunctions.tanhSmoothing(1, timeCoef)) - a.scale;
+
+        return new Checkpoint(MathFunctions.tanhSmoothing(b.x - a.x, timeCoef),
+                MathFunctions.tanhSmoothing(b.y - a.y, timeCoef),
+                scale,
+                MathFunctions.tanhSmoothing(b.angle - a.angle, timeCoef),
+                (int)(timeCoef * (b.time - a.time)));
+    }
+
+    private float distance(Checkpoint a, Checkpoint b){
+        return (float) Math.pow(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2) +
+                Math.pow(Math.log(Math.max(a.scale, b.scale)) / Math.log(Math.min(a.scale, b.scale)), 2), 0.5);
     }
 
     public void stopTimer(){

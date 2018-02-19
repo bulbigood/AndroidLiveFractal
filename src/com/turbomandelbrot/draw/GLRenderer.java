@@ -62,6 +62,8 @@ public class GLRenderer implements Renderer {
 
     private float[] edge_detection_step = {0, 0};
 
+    private boolean symmetry_optimization = true;
+
     /**
      * Выделение границ и заливка однородных областей "старыми" пикселями. Состояния 0 и 1
      */
@@ -162,8 +164,8 @@ public class GLRenderer implements Renderer {
         screenDimens[0] = width;
         screenDimens[1] = height;
 
-        screenQ[0] = width * explorer.getQuality();
-        screenQ[1] = height * explorer.getQuality();
+        screenQ[0] = screenDimens[0] * explorer.getQuality();
+        screenQ[1] = screenDimens[1] * explorer.getQuality();
 
         edge_detection_step[0] = 1 / screenQ[0];
         edge_detection_step[1] = 1 / screenQ[1];
@@ -224,14 +226,15 @@ public class GLRenderer implements Renderer {
     }
 
     private void Render(float[] m) {
+        float[] lbCorner = MathFunctions.getLBCornerPos(explorer.posValues(), screenQ);
+        float[] prev_pos = MathFunctions.getLBCornerPos(explorer.prevPosValues(), screenQ);
+
         if(!explorer.isStatic() || renderTimes < neededRendersToAllBuffers) {
             int srcFB = evenRender? 0:1;
             int dstFB = evenRender? 1:0;
             lastDynamicBuffer = dstFB;
             evenRender = !evenRender;
 
-            float[] lbCorner = MathFunctions.getLBCornerPos(explorer.posValues(), screenQ);
-            float[] prev_pos = MathFunctions.getLBCornerPos(explorer.prevPosValues(), screenQ);
             if(renderTimes < neededRendersToAllBuffers)
                 prev_pos = Explorer.NULL_POS;
 
@@ -260,7 +263,7 @@ public class GLRenderer implements Renderer {
 
                 GLES20.glViewport((int) -offset_coord[0], (int) -offset_coord[1], (int) screenQ[0], (int) screenQ[1]);
                 drawImage(m, uvBuffer, srcFB);
-            } else if (symmetry == 1) {
+            } else if (symmetry == 1 && symmetry_optimization) {
                 float[] bounded_pos = new float[3];
                 bounded_pos[0] = texPos[0] / lbCorner[2] + lbCorner[0];
                 bounded_pos[1] = texPos[1] / lbCorner[2] + lbCorner[1];
@@ -275,10 +278,12 @@ public class GLRenderer implements Renderer {
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + mirrorTextureIndex);
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mirrorCopyTextureID[0]);
 
-                GLES20.glViewport((int) texPos[0], (int) texPos[1], (int) screenQ[0], (int) screenQ[1]);
+                //GLES20.glViewport((int)texPos[0], (int)texPos[1], (int) screenQ[0], (int) screenQ[1]);
+                GLES20.glViewport(Math.round(texPos[0]), Math.round(texPos[1]), (int) screenQ[0], (int) screenQ[1]);
                 drawImage(m, uvBuffer, mirrorTextureIndex);
 
-                GLES20.glViewport((int) offset_coord[0], (int) offset_coord[1], (int) screenQ[0], (int) screenQ[1]);
+                //GLES20.glViewport((int)offset_coord[0], (int)offset_coord[1], (int) screenQ[0], (int) screenQ[1]);
+                GLES20.glViewport(Math.round(offset_coord[0]), Math.round(offset_coord[1]), (int) screenQ[0], (int) screenQ[1]);
                 drawImage(m, ymirror_uvBuffer, mirrorTextureIndex);
 
                 //GLES20.glViewport(0, 0, (int) screenDimens[0], (int) screenDimens[1]);
@@ -304,6 +309,11 @@ public class GLRenderer implements Renderer {
     }
 
     private void drawFractal(float[] m, float[] lb_position, float[] lb_prev_position, float[] offset_coord, int texID) {
+        float[] lb_pos = new float[3];
+        float[] lb_prev_pos = new float[3];
+        System.arraycopy( lb_position, 0, lb_pos, 0, 3 );
+        System.arraycopy( lb_prev_position, 0, lb_prev_pos, 0, 3 );
+
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + colorGradientTextureIndex);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, colorGradientTextureID[0]);
 
@@ -331,9 +341,9 @@ public class GLRenderer implements Renderer {
 
 
         int mPosHandle = GLES20.glGetUniformLocation(shaderProgram, "pos");
-        GLES20.glUniform3fv(mPosHandle, 1, lb_position, 0);
+        GLES20.glUniform3fv(mPosHandle, 1, lb_pos, 0);
         int mPrevCoordHandle = GLES20.glGetUniformLocation(shaderProgram, "prev_pos");
-        GLES20.glUniform3fv(mPrevCoordHandle, 1, lb_prev_position, 0);
+        GLES20.glUniform3fv(mPrevCoordHandle, 1, lb_prev_pos, 0);
 
 
         int mSampler1Loc = GLES20.glGetUniformLocation(shaderProgram, "prev_frame");
@@ -428,37 +438,41 @@ public class GLRenderer implements Renderer {
         }
     }
 
+    //TODO: неправильно определяется координата симметрии при некоторых scale, из-за чего изображение прыгает
     private void saveSymmetryData(float[] texPos, float[] offset_coord){
         float[] offset = {screenQ[0] * mirrorScreenThreshold, screenQ[1] * mirrorScreenThreshold};
         float[] symmetryCoord = {0, 0};
         if(explorer.getFractal().X_SYMMETRY) {
-            symmetryCoord[0] = Math.round((explorer.getFractal().POINT_OF_SYMMETRY[0] -
+            symmetryCoord[0] = ((explorer.getFractal().POINT_OF_SYMMETRY[0] -
                     MathFunctions.getLBCornerPos(explorer.posValues(), screenQ)[0]) * explorer.scale());
 
             if(symmetryCoord[0] > offset[0] && symmetryCoord[0] < screenQ[0] - offset[0]){
                 //Определяем бОльшую часть экрана, которую нужно отрисовать и затем зеркалить
                 if(symmetryCoord[0] > screenQ[0]/2){
                     texPos[0] = symmetryCoord[0] - screenQ[0];
-                    offset_coord[0] = symmetryCoord[0];
+                    offset_coord[0] = symmetryCoord[0] - 1;
                 } else {
                     texPos[0] = symmetryCoord[0];
-                    offset_coord[0] = symmetryCoord[0] - screenQ[0];
+                    offset_coord[0] = symmetryCoord[0] - screenQ[0] + 1;
                 }
             }
         }
         if(explorer.getFractal().Y_SYMMETRY) {
-            symmetryCoord[1] = Math.round((explorer.getFractal().POINT_OF_SYMMETRY[1] -
+            symmetryCoord[1] = ((explorer.getFractal().POINT_OF_SYMMETRY[1] -
                     MathFunctions.getLBCornerPos(explorer.posValues(), screenQ)[1]) * explorer.scale());
 
             if(symmetryCoord[1] > offset[1] && symmetryCoord[1] < screenQ[1] - offset[1]){
                 //Определяем бОльшую часть экрана, которую нужно отрисовать и затем зеркалить
                 if(symmetryCoord[1] > screenQ[1]/2){
+                    //Рендер нижней половины
                     texPos[1] = symmetryCoord[1] - screenQ[1];
-                    offset_coord[1] = symmetryCoord[1];
+                    offset_coord[1] = symmetryCoord[1] - 1;
                 } else {
+                    //Рендер верхней половины
                     texPos[1] = symmetryCoord[1];
-                    offset_coord[1] = symmetryCoord[1] - screenQ[1];
+                    offset_coord[1] = symmetryCoord[1] - screenQ[1] + 1;
                 }
+
             }
         }
     }

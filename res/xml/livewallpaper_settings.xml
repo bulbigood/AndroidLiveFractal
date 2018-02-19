@@ -7,7 +7,7 @@
 
 	<Preference
 		android:title="@string/main_set_wallpaper"
-		android:key="@string/main_set_wallpaper" />
+	android:key="@string/main_set_wallpaper" />
 	<Preference
 		android:title="@string/main_explore"
 		android:key="@string/main_explore" />
@@ -73,8 +73,20 @@
 		</PreferenceScreen>
 		<PreferenceScreen android:title="@string/main_wallpaper_settings"
 			android:key="@string/main_wallpaper_settings"
-			android:summary="@string/main_wallpaper_settings_summary"
-						  android:enabled="false">
+			android:summary="@string/main_wallpaper_settings_summary">
+			<Preference
+					android:title="@string/wallpaper_set_path"
+					android:key="@string/wallpaper_set_path_key" />
+			<CheckBoxPreference
+					android:title="@string/wallpaper_circular"
+					android:key="@string/wallpaper_circular"
+					android:defaultValue="true"/>
+			<com.turbomandelbrot.ui.seekbarpreference.SeekBarPreference
+					android:key="@string/wallpaper_speed_key"
+					android:title="@string/wallpaper_speed"
+					android:defaultValue="5"
+					sample:msbp_minValue="1"
+					sample:msbp_maxValue="11"/>
 		</PreferenceScreen>
 	</PreferenceCategory>
 	<Preference android:title="@string/main_restore"

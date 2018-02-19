@@ -40,6 +40,12 @@
     <string name="quality_show_fps_key">SHOW_FPS</string>
     <string name="quality_show_fps">Show FPS</string>
 
+    <string name="wallpaper_set_path_key">FLIGHT_PATH</string>
+    <string name="wallpaper_set_path">Set a flight path</string>
+    <string name="wallpaper_circular">Circular</string>
+    <string name="wallpaper_speed_key">WALLPAPER_SPEED</string>
+    <string name="wallpaper_speed">Speed</string>
+
     <string name="did_not_pass_requirements_title">Unsuitable GPU!</string>
     <string name="did_not_pass_requirements_message">Your GPU does not have some instructions necessary for the correct operation of the application. Errors may occur during use.</string>
 </resources>

@@ -36,9 +36,7 @@ public class TouchExplorer implements Explorer {
     private float quality;
     private int iterationsNum;
     private float[] pos = NULL_POS;
-    private float angle = 0;
     private float[] prev_pos = NULL_POS;
-    private float prev_angle = 0;
 
     private ArrayList<Integer> fpsShowTimesList;
 
@@ -63,7 +61,7 @@ public class TouchExplorer implements Explorer {
 
         pos = fractal.DEFAULT_POSITION;
         screenMatrix.setQuality(quality);
-        screenMatrix.setPosition(pos[0], pos[1], pos[2] * 2, angle);
+        screenMatrix.setPosition(pos[0], pos[1], pos[2] * 2, pos[3]);
     }
 
     public Fractal getFractal(){
@@ -85,8 +83,8 @@ public class TouchExplorer implements Explorer {
         return iterationsNum;
     }
 
-    public byte benchmark(){
-        return 0;
+    public boolean benchmark(){
+        return false;
     }
 
     public boolean showingFPS() {
@@ -112,10 +110,8 @@ public class TouchExplorer implements Explorer {
         }
 
         prev_pos = pos;
-        prev_angle = angle;
 
         pos = screenMatrix.getPosition();
-        angle = screenMatrix.getAngle();
     }
 
     public void stopTimer(){
@@ -139,17 +135,12 @@ public class TouchExplorer implements Explorer {
 
     @Override
     public float angle() {
-        return angle;
-    }
-
-    @Override
-    public float prevAngle() {
-        return prev_angle;
+        return pos[3];
     }
 
     @Override
     public boolean isStatic() {
-        return pos[0] == prev_pos[0] && pos[1] == prev_pos[1] && pos[2] == prev_pos[2] && angle == prev_angle;
+        return pos[0] == prev_pos[0] && pos[1] == prev_pos[1] && pos[2] == prev_pos[2] && pos[3] == prev_pos[3];
     }
 
     @Override

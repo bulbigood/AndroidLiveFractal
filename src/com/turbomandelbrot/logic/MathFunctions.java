@@ -4,11 +4,21 @@ import java.util.ArrayList;
 
 public class MathFunctions {
 
+    public static float tanhSmoothing(float dist, float timeCoef){
+        return (float) (dist/2 * (1.003f * Math.tanh(2*Math.PI * timeCoef - Math.PI) + 1));
+    }
+
+    public static float geomProgression(float start, float finish, float timeCoef){
+        double dist = finish/start;
+        return (float) Math.pow(dist, timeCoef + Math.log(start)/Math.log(dist));
+    }
+
     public static float[] getLBCornerPos(float[] centerPos, float[] screenSize) {
-        float[] vrArray = new float[3];
+        float[] vrArray = new float[4];
         vrArray[0] = centerPos[0] - screenSize[0] / (2 * centerPos[2]);
         vrArray[1] = centerPos[1] - screenSize[1] / (2 * centerPos[2]);
         vrArray[2] = centerPos[2];
+        vrArray[3] = centerPos[3];
         return vrArray;
     }
 
@@ -59,7 +69,15 @@ public class MathFunctions {
         return ++v;
     }
 
-    public static boolean floatEqual(float a, float b){
-        return Math.abs(a - b) < 0.0001f;
+    public static boolean floatEqual(float a, float b, float surplus){
+        return Math.abs(a - b) < surplus;
+    }
+
+    public static float round(float a, float accuracy){
+        return (float)Math.rint(a / accuracy) * accuracy;
+    }
+
+    public static float floor(float a, float accuracy){
+        return (float)Math.floor(a / accuracy) * accuracy;
     }
 }

@@ -23,11 +23,7 @@ public class ScreenMatrix {
     }
 
     public float[] getPosition(){
-        return new float[] {pos[0], pos[1], pos[2]};
-    }
-
-    public float getAngle(){
-        return angle;
+        return new float[] {pos[0], pos[1], pos[2], angle};
     }
 
     public void translate(float x, float y) {

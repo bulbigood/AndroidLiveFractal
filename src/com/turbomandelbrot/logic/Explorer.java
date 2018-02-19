@@ -16,7 +16,6 @@ public interface Explorer {
     float angle();
     float[] posValues();
     float[] prevPosValues();
-    float prevAngle();
     boolean isStatic();
     int antiflickeringEnabled();
     float getAntiflickeringPixelWeight();
@@ -26,7 +25,7 @@ public interface Explorer {
      * Эксплорер производит бенчмарк
      * @return 0 - нет, 1 - бенчмарк с рендером на экран, 2 - бенчмарк с рендером в буфер
      */
-    byte benchmark();
+    boolean benchmark();
     boolean showingFPS();
     float getFPS();
     float getAverageFPS();
